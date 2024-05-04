@@ -16,6 +16,7 @@ const calendar = document.querySelector(".calendar"),
   addEventFrom = document.querySelector(".event-time-from "),
   addEventTo = document.querySelector(".event-time-to "),
   addEventSubmit = document.querySelector(".add-event-btn ");
+  document.querySelector(".download-ics").addEventListener("click", generateICS);
 
 let today = new Date();
 let activeDay;
@@ -473,4 +474,37 @@ function convertTime(time) {
   timeHour = timeHour % 12 || 12;
   time = timeHour + ":" + timeMin + " " + timeFormat;
   return time;
+}
+
+
+function generateICS() {
+  let calendarData = "BEGIN:VCALENDAR\nVERSION:2.0\n";
+  
+  eventsArr.forEach(event => {
+    event.events.forEach((evento) => {
+      console.log(evento.title);
+      console.log(convertTime(evento.time));
+    });
+
+    const startDate = new Date(event.year, event.month - 1, event.day);
+    const endDate = new Date(event.year, event.month - 1, event.day);
+    endDate.setHours(endDate.getHours() + 1); // Duración de 1 hora, ajusta según necesites
+    
+    calendarData += "BEGIN:VEVENT\n";
+    calendarData += "DTSTART:" + startDate.toISOString().replace(/-|:|\.\d+/g, "") + "\n";
+    calendarData += "DTEND:" + endDate.toISOString().replace(/-|:|\.\d+/g, "") + "\n";
+    calendarData += "SUMMARY:" + event.events[0].title + "\n"; // Aquí puedes ajustar cómo se muestra el título
+    calendarData += "END:VEVENT\n";
+  });
+  
+  calendarData += "END:VCALENDAR";
+  
+  // Descargar el archivo .ics
+  const blob = new Blob([calendarData], { type: "text/calendar" });
+  const link = document.createElement("a");
+  link.href = window.URL.createObjectURL(blob);
+  link.setAttribute("download", "calendar.ics");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
